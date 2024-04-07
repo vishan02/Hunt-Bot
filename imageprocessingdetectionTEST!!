@@ -1,0 +1,35 @@
+import cv2
+import numpy as np
+
+# Read the image
+image = cv2.imread('path_to_your_slug_image.jpg')
+
+# Convert to HSV color space
+hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+# Define the color range for brown (example values, adjust based on your needs)
+lower_brown = np.array([10, 100, 20])
+upper_brown = np.array([20, 255, 200])
+
+# Create a mask to isolate slugs
+mask = cv2.inRange(hsv_image, lower_brown, upper_brown)
+
+# Apply morphological operations
+kernel = np.ones((5, 5), np.uint8)
+mask_cleaned = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
+# Find contours
+contours, _ = cv2.findContours(mask_cleaned, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Filter contours based on geometric properties
+for contour in contours:
+    # Example: Filter based on area
+    area = cv2.contourArea(contour)
+    if area > 100:  # Adjust area threshold based on your needs
+        # This contour is considered a potential slug
+        cv2.drawContours(image, [contour], -1, (0, 255, 0), 3)
+
+# Show the result
+cv2.imshow('Detected Slugs', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
