@@ -1,0 +1,72 @@
+from ultralytics import YOLO
+import cv2
+import math
+
+# start webcam
+cap = cv2.VideoCapture(0)
+cap.set(3, 640)  # Width
+cap.set(4, 480)  # Height
+
+# model
+model = YOLO("yolo-Weights/yolov8n.pt")
+
+# List of class names is omitted for brevity; please include it from your original code.
+# object classes
+classNames = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train", "truck", "boat",
+              "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
+              "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella",
+              "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite", "baseball bat",
+              "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle", "wine glass", "cup",
+              "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange", "broccoli",
+              "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa", "pottedplant", "bed",
+              "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard", "cell phone",
+              "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
+              "teddy bear", "hair drier", "toothbrush"
+              ]
+
+while True:
+    success, img = cap.read()
+    if not success:
+        break  # If no frame is captured/broken, then break out of the loop
+
+    # Preprocessing
+    # Resize image for the model; this assumes the model expects 640x640 images.
+    img_resized = cv2.resize(img, (640, 640))
+
+    # Process the image with YOLO
+    results = model(img_resized, stream=True)
+
+    # Note: The resizing factor to adjust the bounding box coordinates to fit the original image display
+    resize_factor_w = img.shape[1] / img_resized.shape[1]
+    resize_factor_h = img.shape[0] / img_resized.shape[0]
+
+    # Drawing bounding boxes and labels on the original image
+    for r in results:
+        boxes = r.boxes
+
+        for box in boxes:
+            # Adjust bounding box coordinates
+            x1, y1, x2, y2 = box.xyxy[0]
+            x1 = int(x1 * resize_factor_w)
+            y1 = int(y1 * resize_factor_h)
+            x2 = int(x2 * resize_factor_w)
+            y2 = int(y2 * resize_factor_h)
+
+            # Draw the bounding box
+            cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 3)
+
+            # Confidence and class name
+            confidence = math.ceil((box.conf[0] * 100)) / 100
+            cls = int(box.cls[0])
+            label = f"{classNames[cls]}: {confidence}"
+
+            # Draw label
+            cv2.putText(img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 0), 2)
+
+    # Display the original image with bounding boxes
+    cv2.imshow('Webcam', img)
+    if cv2.waitKey(1) == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
