@@ -1,0 +1,38 @@
+import cv2
+import numpy as np
+
+# Load the image from the path
+img_path = r"C:\Users\visha\OneDrive\Desktop\objectdetector\slugtest.png"
+img = cv2.imread(img_path)
+
+# Resize the image to 640x640 pixels
+img_resized = cv2.resize(img, (640, 640))
+
+# Convert the resized image to grayscale
+gray_img_resized = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
+
+# Apply Canny edge detection on the grayscale image
+edges_resized = cv2.Canny(gray_img_resized, 100, 200)
+
+# Define a kernel for morphological operations
+kernel = np.ones((5, 5), np.uint8)
+
+# Apply dilation followed by erosion, also known as closing
+morph_closed = cv2.morphologyEx(edges_resized, cv2.MORPH_CLOSE, kernel)
+
+# Find contours from the morphologically processed image
+contours, _ = cv2.findContours(morph_closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+# Draw bounding boxes around the detected contours
+for cnt in contours:
+    # Get the bounding rect
+    x, y, w, h = cv2.boundingRect(cnt)
+    # Draw the rectangle
+    cv2.rectangle(img_resized, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+# Display the original image with bounding boxes
+cv2.imshow('Detected Slugs', img_resized)
+
+# Wait for a key press and then close all windows
+cv2.waitKey(0)
+cv2.destroyAllWindows()
