@@ -1,43 +1,29 @@
 from ultralytics import YOLO
-import torch
 
 # Load a model
 model = YOLO("yolov8n.pt")  # nano version of YOLOv8
 
-# Define training parameters
-batch_size = 16
-learning_rate = 0.001
-weight_decay = 0.0005
-epochs = 200
-num_workers = 4
+# Define the path to your data and model configuration
+data_path = r"C:\Users\visha\Downloads\Schnecken.v8i.yolov8\data.yaml"
 
-# Setting up optimizer with weight decay
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
-
-# Learning rate scheduler setup
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=50, gamma=0.1)
-
-# Configure and train the model
+# Configure and train the model using only supported arguments
 model.train(
-    data=r"C:\Users\visha\Downloads\Schnecken.v8i.yolov8\data.yaml",
-    epochs=epochs,
-    batch_size=batch_size,
-    optimizer=optimizer,
-    scheduler=scheduler,
-    num_workers=num_workers
+    data=data_path,
+    model="yolov8n.pt",  # Specify the model if not already loaded
+    epochs=200,
+    batch=16,  # Use 'batch' for batch size
+    imgsz=640,  # Define the image size here directly
+    workers=4,  # Define the number of workers
+    lr0=0.001  # Initial learning rate
 )
 
 # Evaluate model performance on the validation set
 metrics = model.val()
 
 # Predict on an image
-results = model(r"C:\Users\visha\OneDrive\Desktop\objectdetector\slugtest.png")
+results = model.predict(r"C:\Users\visha\OneDrive\Desktop\objectdetector\slugtest.png")
 
 # Export the model in ONNX format
 path = model.export(format="onnx")
-
-# Print path where the model is saved
-print("Model has been exported to:", path)
-
-# Print metrics to understand model performance
+print(f"Model has been exported to: {path}")
 print("Validation metrics:", metrics)
